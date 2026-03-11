@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: nasa_db_container
+    restart: always
+    environment:
+      POSTGRES_USER: chiara_polizzi
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: nasa_db
+    ports:
+      - "5432:5432"
+    volumes:
+      # Questo collega la cartella locale 'init' a quella di Docker
+      - ./init:/docker-entrypoint-initdb.d
+
+  app:
+    build: .
+    container_name: nasa_app_container
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://chiara_polizzi:password123@db:5432/nasa_db
