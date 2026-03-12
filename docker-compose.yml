@@ -14,6 +14,7 @@ services:
     volumes:
       # Questo collega la cartella locale 'init' a quella di Docker
       - ./init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
 
   app:
     build: .
@@ -24,3 +25,6 @@ services:
       - db
     environment:
       DATABASE_URL: postgres://chiara_polizzi:password123@db:5432/nasa_db
+
+volumes:
+  postgres_data:

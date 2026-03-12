@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <title>NASA Asteroid Dashboard - Chiara Polizzi</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
+        .filters { margin-bottom: 20px; padding: 10px; background: #e2e2e2; border-radius: 5px; }
+        input[type="date"], button { padding: 5px; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard Asteroidi NASA</h1>
+        
+        <div class="filters">
+            <label for="startDate">Da:</label>
+            <input type="date" id="startDate">
+            
+            <label for="endDate">A:</label>
+            <input type="date" id="endDate">
+            
+            <button onclick="loadChart()">Filtra per Periodo</button>
+        </div>
+
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <script>
+        let myChart;
+
+        async function loadChart() {
+            // Leggiamo i valori scelti dall'utente
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            // Costruiamo l'URL dinamicamente se le date sono state inserite
+            let url = '/api/stats';
+            if (startDate && endDate) {
+                url += `?startDate=${startDate}&endDate=${endDate}`;
+            }
+
+            // Chiamata all'API
+            const response = await fetch(url);
+            const data = await response.json();
+
+            // Prepariamo i dati per Chart.js
+            const labels = data.map(item => `${item.nome} (${item.data_passaggio.split('T')[0]})`);
+            const values = data.map(item => item.velocita_km_h);
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if (myChart) { myChart.destroy(); }
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Velocità (km/h)',
+                        data: values,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+        }
+        
+        // Carica il grafico generale all'apertura della pagina
+        loadChart();
+    </script>
+</body>
+</html>
