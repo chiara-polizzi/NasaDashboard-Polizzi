@@ -35,11 +35,17 @@ Per eseguire il progetto è necessario avere installato:
 
 ## Struttura del Progetto
 * /init/init.sql: Script per la creazione automatica delle tabelle e delle viste analitiche.
-* app.js: Backend applicativo. Gestisce le chiamate all'API NASA, le operazioni CRUD sui profili e l'interrogazione del database.
+* /models: Livello DAO (Data Access Object) per l'interazione sicura con PostgreSQL, incapsulando la logica SQL.
+* /controllers: Logica di business dell'applicazione, gestisce le richieste client e coordina i modelli.
+* /routes: Configurazione del routing (centralino) per mappare gli endpoint RESTful.
+* /services: Moduli dedicati alle chiamate esterne (es. API NASA) e alla pulizia/snellimento dei payload JSON.
+* app.js: Entry-point del backend, snellito per gestire unicamente l'avvio del server Express e l'iniezione dei middleware.
 * /public/index.html: Interfaccia utente interattiva.
 * docker-compose.yml e Dockerfile: File per l'orchestrazione, configurati con Volumi persistenti per non perdere i dati al riavvio.
 
 ## Feature Implementate
-* Integrazione API: Connessione all'API NASA NeoWs.
+* Architettura MVC Modulare: Backend Node.js refattorizzato seguendo il pattern Model-View-Controller per garantire scalabilità e pulizia del codice.
+* Sicurezza Database: Prevenzione attiva delle SQL Injection tramite l'utilizzo sistematico di Prepared Statements.
+* Integrazione API: Connessione all'API NASA NeoWs con logica di caching locale.
 * Persistenza Relazionale: Dati salvati in PostgreSQL per garantire l'integrità referenziale.
 * Query Analitica e Filtri: Utilizzo di JOIN SQL per estrarre le velocità di passaggio e funzionalità di filtraggio dei dati per periodo temporale.
