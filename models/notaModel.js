@@ -12,7 +12,14 @@ async function getNoteByProfilo(profiloId) {
         WHERE n.profilo_id = $1
         ORDER BY n.data_salvataggio DESC;
     `;
-    // TODO: eseguire query
+    
+    try {
+        // Passo profiloId per sostituire $1
+        const result = await pool.query(sql, [profiloId]);
+        return result.rows;
+    } catch (error) {
+        throw error;
+    }
 }
 
 /**
@@ -29,7 +36,14 @@ async function upsertNotaPersonale(profiloId, asteroideId, testoNota) {
             nota_personale = EXCLUDED.nota_personale,
             data_salvataggio = CURRENT_TIMESTAMP;
     `;
-    // TODO: eseguire query
+    
+    try {
+        // Passo i tre parametri nell'ordine in cui appaiono nella query SQL
+        await pool.query(sql, [profiloId, asteroideId, testoNota]);
+        return { success: true };
+    } catch (error) {
+        throw error;
+    }
 }
 
 /**
@@ -41,7 +55,13 @@ async function deleteNotaPersonale(profiloId, asteroideId) {
         DELETE FROM note_profili 
         WHERE profilo_id = $1 AND asteroide_id = $2;
     `;
-    // TODO: eseguire query
+    
+    try {
+        await pool.query(sql, [profiloId, asteroideId]);
+        return { success: true };
+    } catch (error) {
+        throw error;
+    }
 }
 
 module.exports = {

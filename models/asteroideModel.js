@@ -32,9 +32,13 @@ async function getStatsDashboard(startDate, endDate) {
   // Ordino per velocità decrescente e prendo i top 10
   query += ` ORDER BY v.velocita_km_h DESC LIMIT 10 `;
 
-  // Eseguo la query sul pool e restituisco solo l'array dei risultati (rows)
-  const result = await pool.query(query, queryParams);
-  return result.rows;
+  try {
+      // Eseguo la query sul pool e restituisco solo l'array dei risultati (rows)
+      const result = await pool.query(query, queryParams);
+      return result.rows;
+  } catch(error) {
+      throw error; // Propago l'errore al Controller
+  }
 }
 
 /**
@@ -43,7 +47,13 @@ async function getStatsDashboard(startDate, endDate) {
  */
 async function getInsightRischioMassimo() {
     const sql = `SELECT * FROM v_insight_rischio_massimo;`;
-    // TODO: eseguire query e ritornare i dati
+    
+    try {
+        const result = await pool.query(sql);
+        return result.rows;
+    } catch (error) {
+        throw error;
+    }
 }
 
 /**
@@ -58,7 +68,13 @@ async function getTopMesiAnniAvvistamenti(limite = 5) {
         ORDER BY totale_asteroidi DESC 
         LIMIT $1;
     `;
-    // TODO: eseguire query passando 'limite' e ritornare i dati
+    
+    try {
+        const result = await pool.query(sql, [limite]);
+        return result.rows;
+    } catch (error) {
+        throw error;
+    }
 }
 
 /**
@@ -71,7 +87,13 @@ async function getMappaPianetiByMeseAnno(mese, anno) {
         WHERE mese_passaggio = $1 AND anno_passaggio = $2
         ORDER BY distanza_miss_km DESC; 
     `;
-    // TODO: eseguire query passando 'mese' e 'anno'
+
+    try {
+        const result = await pool.query(sql, [mese, anno]);
+        return result.rows;
+    } catch (error) {
+        throw error;
+    }
 }
 
 // Esporto le funzioni per farle usare ai Controllers

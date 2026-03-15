@@ -5,7 +5,13 @@ const pool = require('./db');
  */
 async function getAllProfili() {
     const sql = `SELECT id, nome_profilo, creato_il FROM profili ORDER BY id ASC;`;
-    // TODO: eseguire query
+    
+    try {
+        const result = await pool.query(sql);
+        return result.rows;
+    } catch (error) {
+        throw error;
+    }
 }
 
 /**
@@ -19,7 +25,16 @@ async function updateNomeProfilo(profiloId, nuovoNome) {
         WHERE id = $2 
         RETURNING *;
     `;
-    // TODO: eseguire query passando i parametri
+    
+    try {
+        // Attenzione all'ordine: $1 -> nuovoNome, $2 -> profiloId
+        const result = await pool.query(sql, [nuovoNome, profiloId]);
+        
+        // Uso result.rows[0] perché mi aspetto che l'UPDATE modifichi un solo profilo
+        return result.rows[0]; 
+    } catch (error) {
+        throw error;
+    }
 }
 
 /**
