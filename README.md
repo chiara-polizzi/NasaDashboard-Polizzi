@@ -24,12 +24,13 @@ Per eseguire il progetto è necessario avere installato:
 2. Avvia i container tramite Docker Compose:
    docker-compose up --build
 
-3. Inizializza e popola il database:
-   Apri il browser e visita http://localhost:3000/fetch-data per avviare il download asincrono dei dati dalla NASA.
+3. Apri la Dashboard:
+   Apri il browser e vai su http://localhost:3000. Al primissimo avvio l'interfaccia si caricherà correttamente, ma il grafico risulterà vuoto. Questo è il comportamento atteso, poiché la struttura delle tabelle è stata creata ma non è ancora presente alcuno storico dati al loro interno.
+   Agli avvii successivi la dashboard caricherà e renderizzerà immediatamente il grafico attingendo alla base dati locale perchè grazie alla configurazione dei Volumi Docker, i dati scaricati nelle sessioni precedenti permangono in memoria.
 
-4. Visualizza la Dashboard:
-   Visita http://localhost:3000 per visualizzare la dashboard interattiva con i filtri applicati.
-
+4. Scarica i dati dalla NASA:
+   Dalla pagina web, clicca sul pulsante verde "Sincronizza Dati NASA". Attendi qualche secondo per il download e, una volta comparso l'avviso di conferma, il grafico si popolerà automaticamente con i dati aggiornati.
+   
 5. Gestione dei Dati e Reset:
     I dati (profili utente, note e dati NASA) sono salvati in un Volume Docker permanente. Se spegni il progetto con docker-compose down, i dati non andranno persi. Se desideri resettare completamente il database e ricominciare da zero (forzando la rilettura del file init.sql), esegui: docker-compose down -v (la flag -v elimina i volumi associati).
 
@@ -37,10 +38,13 @@ Per eseguire il progetto è necessario avere installato:
 * /init/init.sql: Script per la creazione automatica delle tabelle e delle viste analitiche.
 * /models: Livello DAO (Data Access Object) per l'interazione sicura con PostgreSQL, incapsulando la logica SQL.
 * /controllers: Logica di business dell'applicazione, gestisce le richieste client e coordina i modelli.
-* /routes: Configurazione del routing (centralino) per mappare gli endpoint RESTful.
+* /routes: Il "centralino" dell'applicazione. È diviso in più file separati per smistare le richieste web in modo ordinato e facile da leggere.
 * /services: Moduli dedicati alle chiamate esterne (es. API NASA) e alla pulizia/snellimento dei payload JSON.
 * app.js: Entry-point del backend, snellito per gestire unicamente l'avvio del server Express e l'iniezione dei middleware.
-* /public/index.html: Interfaccia utente interattiva.
+* /public: Contiene tutti gli file statici per il frontend:
+  * /public/index.html: Struttura della dashboard utente.
+  * /public/css/style.css: Fogli di stile separati per l'interfaccia grafica.
+  * /public/js/dashboard.js: Logica asincrona di frontend e renderizzazione del grafico tramite Chart.js.
 * docker-compose.yml e Dockerfile: File per l'orchestrazione, configurati con Volumi persistenti per non perdere i dati al riavvio.
 
 ## Feature Implementate

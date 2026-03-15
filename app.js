@@ -1,6 +1,9 @@
 const express = require('express');
-// Importo le mie rotte (il centralino)
-const apiRoutes = require('./routes/apiRoutes');
+
+// Importo i tre router specializzati
+const asteroideRoutes = require('./routes/asteroideRoutes');
+const profiloRoutes = require('./routes/profiloRoutes');
+const syncRoutes = require('./routes/syncRoutes');
 
 const app = express();
 const port = 3000;
@@ -16,6 +19,7 @@ app.listen(port, () => {
 // Serve i file statici (HTML, CSS, JS) dalla cartella 'public'
 app.use(express.static('public'));
 
-// Tutte le chiamate che iniziano con '/' o '/api' verranno gestite dal nostro centralino apiRoutes
-app.use('/api', apiRoutes);
-app.use('/', apiRoutes); // Aggiunto per far funzionare /fetch-data direttamente come prima
+// Dico ad Express quale "prefisso" usare per ogni gruppo di rotte
+app.use('/api/asteroidi', asteroideRoutes);
+app.use('/api/profili', profiloRoutes);
+app.use('/api/system', syncRoutes); 

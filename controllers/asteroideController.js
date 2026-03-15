@@ -23,7 +23,34 @@ async function getStats(req, res) {
   }
 }
 
-// Esporto la funzione per renderla disponibile alle rotte
+/**
+ * Gestisce la richiesta per la Top 10 degli asteroidi più pericolosi.
+ */
+async function getInsightRischio(req, res) {
+    // TODO: Chiamare asteroideModel.getInsightRischioMassimo() e inviare JSON
+}
+
+/**
+ * Gestisce la richiesta per consigliare i mesi con più avvistamenti.
+ */
+async function getMesiConsigliati(req, res) {
+    // TODO: Estrarre 'limite' (opzionale) da req.query
+    // TODO: Chiamare asteroideModel.getTopMesiAnniAvvistamenti(limite) e inviare JSON
+}
+
+/**
+ * Gestisce la richiesta per i dati della mappa spaziale interattiva.
+ */
+async function getMappaPianeti(req, res) {
+    // TODO: Estrarre 'mese' e 'anno' da req.query
+    // TODO: Validare che siano presenti, altrimenti restituire errore 400
+    // TODO: Chiamare asteroideModel.getMappaPianetiByMeseAnno(mese, anno) e inviare JSON
+}
+
+// Esporto le funzioni per renderle disponibili alle rotte
 module.exports = {
-  getStats
+  getStats,
+  getInsightRischio,
+  getMesiConsigliati,
+  getMappaPianeti
 };
