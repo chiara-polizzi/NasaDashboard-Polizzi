@@ -1,6 +1,9 @@
 // Importo il Model (il mio "oggetto DAO") che contiene le query SQL
 const asteroideModel = require('../models/asteroideModel');
 
+const MIN_LIMITE_MESI = 1;
+const MAX_LIMITE_MESI = 50;
+
 // Controller per gestire la richiesta dei dati per il grafico della dashboard
 async function getStats(req, res) {
   try {
@@ -67,10 +70,25 @@ async function getInsightRischio(req, res) {
  */
 async function getMesiConsigliati(req, res) {
     try {
-        // Estraiamo il limite solo se c'è, altrimenti passiamo undefined
-        const limite = req.query.limite ? parseInt(req.query.limite, 10) : undefined;
+        let limite = undefined;
+
+        // Se il frontend ci ha mandato un limite, lo validiamo
+        if (req.query.limite) {
+            limite = parseInt(req.query.limite, 10);
+            
+            // Controllo che sia un numero valido e non negativo
+            if (isNaN(limite) || limite < MIN_LIMITE_MESI) {
+                return res.status(400).json({ error: "Il limite deve essere un numero intero maggiore di zero." });
+            }
+            
+            // Controllo di sicurezza: evitiamo query troppo pesanti (es. LIMIT 1000000)
+            if (limite > MAX_LIMITE_MESI) {
+                return res.status(400).json({ error: "Il limite massimo consentito è 50." });
+            }
+        }
         
-        // Se limite è undefined, il Model userà il suo 5 di default!
+        // Se limite è rimasto 'undefined' (campo vuoto nel frontend), 
+        // il Model applicherà il suo default (5).
         const dati = await asteroideModel.getTopMesiAnniAvvistamenti(limite);
         res.status(200).json(dati);
     } catch (error) {

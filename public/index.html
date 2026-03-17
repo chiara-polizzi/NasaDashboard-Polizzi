@@ -1,31 +1,104 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NASA Asteroid Dashboard - Chiara Polizzi</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
+    <div class="dashboard-wrapper">
+        
+        <header class="header">
             <h1>Dashboard Asteroidi NASA</h1>
+            <div class="header-controls">
+            <div class="profile-controls">
+                <select id="profileSelector" onchange="changeProfile()"></select>
+                <button class="btn-rename" onclick="renameProfile()" title="Rinomina profilo corrente">Rinomina</button>
+            </div>
             <button class="btn-sync" onclick="syncNasaData()">Sincronizza Dati NASA</button>
         </div>
+        </header>
 
-        <div class="filters">
-            <label for="startDate">Da:</label>
-            <input type="date" id="startDate">
+        <main class="main-content">
             
-            <label for="endDate">A:</label>
-            <input type="date" id="endDate">
-            
-            <button onclick="loadChart()">Filtra per Periodo</button>
-        </div>
+            <section class="card section-chart">
+                <h2>Velocità di Passaggio (km/h)</h2>
+                <div class="filters">
+                    <label for="startDate">Da:</label>
+                    <input type="date" id="startDate">
+                    <label for="endDate">A:</label>
+                    <input type="date" id="endDate">
+                    <button onclick="loadChart()">Filtra per Periodo</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </section>
 
-        <canvas id="myChart"></canvas>
+            <section class="card section-map">
+                <h2>Mappa Spaziale degli Avvistamenti</h2>
+                <div class="filters">
+                    <input type="number" id="mapMonth" placeholder="Mese (es. 10)" min="1" max="12">
+                    <input type="number" id="mapYear" placeholder="Anno (es. 2024)" min="1900" max="2100">
+                    <button onclick="loadSpatialMap()">Genera Mappa</button>
+                </div>
+                <div class="planets-container">
+                    <div class="planet-col" id="col-earth">
+                        <div class="planet-circle earth">Terra</div>
+                        <ul class="asteroid-list" id="list-Earth"></ul>
+                    </div>
+                    <div class="planet-col" id="col-mars">
+                        <div class="planet-circle mars">Marte</div>
+                        <ul class="asteroid-list" id="list-Mars"></ul>
+                    </div>
+                    <div class="planet-col" id="col-juptr">
+                        <div class="planet-circle juptr">Giove</div>
+                        <ul class="asteroid-list" id="list-Juptr"></ul>
+                    </div>
+                </div>
+            </section>
+
+             <section class="section-insights">
+    
+                <div class="card insight-box">
+                    <h2>Top 10 Asteroidi Pericolosi</h2>
+                    <ul class="insight-list" id="top-risk-list">
+                        </ul>
+                </div>
+                
+                <div class="card insight-box">
+                    <h2>Mesi con più Avvistamenti</h2>
+                    
+                    <div class="limit-controls">
+                        <input type="number" id="limitMesi" placeholder="N° mesi" min="1" max="50" class="input-limit">
+                        <button onclick="loadMesi()">Mostra</button>
+                    </div>
+                    
+                    <ul class="insight-list" id="recommended-months-list">
+                        </ul>
+                </div>
+                
+            </section>
+
+        </main>
+
+        <aside class="sidebar-notes">
+            <h2>Le Mie Note</h2>
+            <div id="notes-container" class="notes-list">
+                </div>
+            
+            <div class="add-note-box">
+                <h4>Aggiungi/Modifica Nota</h4>
+                <input type="number" id="noteAsteroidId" placeholder="ID Asteroide" min="1">
+                <textarea id="noteText" rows="3" placeholder="Scrivi un'osservazione..."></textarea>
+                <button onclick="saveNote()">Salva Nota</button>
+            </div>
+        </aside>
+
     </div>
 
     <script src="/js/dashboard.js"></script>
-    
 </body>
 </html>

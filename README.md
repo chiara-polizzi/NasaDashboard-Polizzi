@@ -52,4 +52,7 @@ Per eseguire il progetto è necessario avere installato:
 * Sicurezza Database: Prevenzione attiva delle SQL Injection tramite l'utilizzo sistematico di Prepared Statements.
 * Integrazione API: Connessione all'API NASA NeoWs con logica di caching locale.
 * Persistenza Relazionale: Dati salvati in PostgreSQL per garantire l'integrità referenziale.
-* Query Analitica e Filtri: Utilizzo di JOIN SQL per estrarre le velocità di passaggio e funzionalità di filtraggio dei dati per periodo temporale.
+* Visualizzazione Dati (Chart.js): Un grafico a barre con animazioni fluide per analizzare le velocità degli asteroidi, filtrabile dinamicamente per data.
+* Mappa Spaziale Logica: Suddivisione visiva degli asteroidi in base all'orbita di passaggio (Terra, Marte, Giove), con possibilità di filtrare i risultati per mese e anno.
+* Insight Analitici: Caricamento della Top 10 degli asteroidi più pericolosi e ricerca personalizzabile dei mesi storici con il maggior numero di avvistamenti.
+* Profili e Note: Sistema di salvataggio note e gestione di profili. Le operazioni avvengono in modo asincrono, aggiornando l'interfaccia istantaneamente senza necessità di ricaricare la pagina.
