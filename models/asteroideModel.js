@@ -13,9 +13,9 @@ const pool = require('./db');
  * @param {string} [endDate] - Data di fine ricerca (opzionale, formato YYYY-MM-DD)
  * @returns {Promise<Array>} Ritorna la lista degli asteroidi trovati.
  */
-async function getStatsDashboard(startDate, endDate) {
+async function getStatsDashboard(startDate, endDate, limit = 10, offset = 0) {
   let query = `
-    SELECT a.nome, v.velocita_km_h, v.data_passaggio
+    SELECT a.id_nasa, a.nome, v.velocita_km_h, v.data_passaggio
     FROM asteroidi a
     JOIN avvistamenti v ON a.id_nasa = v.asteroide_id
   `;
@@ -30,7 +30,12 @@ async function getStatsDashboard(startDate, endDate) {
   }
 
   // Ordino per velocità decrescente e prendo i top 10
-  query += ` ORDER BY v.velocita_km_h DESC LIMIT 10 `;
+  // query += ` ORDER BY v.velocita_km_h DESC LIMIT 10 `;
+
+  // Aggiungo ordinamento e paginazione. 
+  // Uso queryParams.length + 1 per calcolare dinamicamente l'indice ($3 e $4, oppure $1 e $2)
+  query += ` ORDER BY v.velocita_km_h DESC LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2} `;
+  queryParams.push(limit, offset);
 
   try {
       // Eseguo la query sul pool e restituisco solo l'array dei risultati (rows)
@@ -60,11 +65,11 @@ async function getInsightRischioMassimo() {
  * Aggrega i dati per consigliare all'utente quali mesi/anni guardare.
  * Sfrutta funzioni aggregate e GROUP BY come richiesto nei requisiti minimi.
  */
-async function getTopMesiAnniAvvistamenti(limite = 5) {
+async function getTopAnniAvvistamenti(limite = 5) {
     const sql = `
-        SELECT anno_passaggio, mese_passaggio, COUNT(*) as totale_asteroidi 
-        FROM v_mappa_pianeti_mese 
-        GROUP BY anno_passaggio, mese_passaggio 
+        SELECT anno_passaggio, COUNT(*) as totale_asteroidi 
+        FROM v_mappa_pianeti 
+        GROUP BY anno_passaggio 
         ORDER BY totale_asteroidi DESC 
         LIMIT $1;
     `;
@@ -80,16 +85,25 @@ async function getTopMesiAnniAvvistamenti(limite = 5) {
 /**
  * Recupera i dati di una specifica finestra temporale per disegnare la mappa interattiva.
  */
-async function getMappaPianetiByMeseAnno(mese, anno) {
-    const sql = `
-        SELECT nome, is_pericoloso, data_passaggio, distanza_miss_km, orbita_corpo 
-        FROM v_mappa_pianeti_mese 
-        WHERE mese_passaggio = $1 AND anno_passaggio = $2
-        ORDER BY distanza_miss_km DESC; 
+async function getMappaPianetiByAnno(anno, mese) {
+    let sql = `
+        SELECT id_nasa, nome, is_pericoloso, data_passaggio, distanza_miss_km, orbita_corpo 
+        FROM v_mappa_pianeti
+        WHERE anno_passaggio = $1 
     `;
 
+    const params = [anno];
+
+    // Se il controller passa un mese valido, aggiungiamo il filtro
+    if (mese) {
+        sql += ` AND mese_passaggio = $2 `;
+        params.push(mese);
+    }
+
+    sql += ` ORDER BY distanza_miss_km ASC; `;
+
     try {
-        const result = await pool.query(sql, [mese, anno]);
+        const result = await pool.query(sql, params);
         return result.rows;
     } catch (error) {
         throw error;
@@ -100,6 +114,6 @@ async function getMappaPianetiByMeseAnno(mese, anno) {
 module.exports = {
   getStatsDashboard,
   getInsightRischioMassimo,
-  getTopMesiAnniAvvistamenti,
-  getMappaPianetiByMeseAnno
+  getTopAnniAvvistamenti,
+  getMappaPianetiByAnno
 };

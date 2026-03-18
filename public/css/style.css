@@ -194,6 +194,44 @@ button:hover { background-color: #004494; }
     height: 400px; /* Altezza fissa in pixel per resistere allo zoom! */
     width: 100%;
 }
+
+/* Controlli di paginazione per il grafico */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+.page-indicator {
+    font-weight: bold;
+    color: #1a2b4c;
+}
+
+.form-hint {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 10px;
+    font-style: italic;
+}
+
+/* Asteroide Pericoloso nella Mappa Spaziale */
+.asteroid-hazardous {
+    background-color: #ffe6e6 !important; /* Sfondo leggermente rosso */
+    border-left-color: #cc0000 !important; /* Bordo rosso scuro */
+}
+
+/* Quadratino della legenda per gli asteroidi pericolosi */
+.legend-hazardous {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: #ffe6e6;
+    border-left: 2px solid #cc0000;
+    margin-left: 2px;
+    vertical-align: middle;
+}
+
 input:invalid {
     border-color: red;
     background-color: #ffe6e6;

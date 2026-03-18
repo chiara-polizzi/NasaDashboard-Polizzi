@@ -56,3 +56,5 @@ Per eseguire il progetto è necessario avere installato:
 * Mappa Spaziale Logica: Suddivisione visiva degli asteroidi in base all'orbita di passaggio (Terra, Marte, Giove), con possibilità di filtrare i risultati per mese e anno.
 * Insight Analitici: Caricamento della Top 10 degli asteroidi più pericolosi e ricerca personalizzabile dei mesi storici con il maggior numero di avvistamenti.
 * Profili e Note: Sistema di salvataggio note e gestione di profili. Le operazioni avvengono in modo asincrono, aggiornando l'interfaccia istantaneamente senza necessità di ricaricare la pagina.
+* Interfaccia Dinamica: I moduli per le note si auto-compilano se si clicca sui dati nei grafici o negli elenchi. Sono stati integrati messaggi di stato per rendere la navigazione chiara e immediata.
+* Paginazione dei Dati: I dati per i grafici vengono estratti dal database a blocchi (10 alla volta) per garantire un rendering fluido e istantaneo, ottimizzando le prestazioni del sistema.

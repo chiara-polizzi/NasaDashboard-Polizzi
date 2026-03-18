@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS note_profili (
 -- VIEW 1: Indice di Rischio (Insight: unisce pericolosità, distanza minima e velocità)
 CREATE OR REPLACE VIEW v_insight_rischio_massimo AS
 SELECT 
+    a.id_nasa,
     a.nome,
     MIN(av.distanza_miss_km) AS distanza_piu_vicina_km,
     MAX(av.velocita_km_h) AS velocita_max_raggiunta,
@@ -58,13 +59,14 @@ SELECT
 FROM asteroidi a
 JOIN avvistamenti av ON a.id_nasa = av.asteroide_id
 WHERE a.is_pericoloso = TRUE
-GROUP BY a.nome
+GROUP BY a.id_nasa, a.nome
 ORDER BY distanza_piu_vicina_km ASC
 LIMIT 10;
 
--- VIEW 2: Dati per il disegno grafico dei pianeti per mese (per il frontend)
-CREATE OR REPLACE VIEW v_mappa_pianeti_mese AS
+-- VIEW 2: Dati per il disegno grafico dei pianeti (per il frontend)
+CREATE OR REPLACE VIEW v_mappa_pianeti AS
 SELECT 
+    a.id_nasa,
     a.nome,
     a.is_pericoloso,
     av.data_passaggio,

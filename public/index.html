@@ -25,23 +25,33 @@
             
             <section class="card section-chart">
                 <h2>Velocità di Passaggio (km/h)</h2>
+                <p class="form-hint">Gli asteroidi sono mostrati in ordine di velocità decrescente.</p>
                 <div class="filters">
                     <label for="startDate">Da:</label>
-                    <input type="date" id="startDate">
+                    <input type="date" id="startDate" min="1800-01-01" max="2500-12-31">
                     <label for="endDate">A:</label>
-                    <input type="date" id="endDate">
+                    <input type="date" id="endDate" min="1800-01-01" max="2500-12-31">
                     <button onclick="loadChart()">Filtra per Periodo</button>
                 </div>
                 <div class="chart-container">
                     <canvas id="myChart"></canvas>
                 </div>
+                <div class="pagination-controls">
+                    <button onclick="changeChartPage(-1)">&#8592; Precedenti</button>
+                    <span id="chartPageIndicator" class="page-indicator">Pagina 1</span>
+                    <button onclick="changeChartPage(1)">Successivi &#8594;</button>
+                </div>
             </section>
 
             <section class="card section-map">
-                <h2>Mappa Spaziale degli Avvistamenti</h2>
+                <h2>Mappa degli Avvistamenti</h2>
+                <p class="form-hint">
+                    Visualizza la distanza degli asteroidi. Inserisci almeno l'anno. <br>
+                    <span class="legend-hazardous"></span> = Asteroide potenzialmente pericoloso.
+                </p>
                 <div class="filters">
-                    <input type="number" id="mapMonth" placeholder="Mese (es. 10)" min="1" max="12">
-                    <input type="number" id="mapYear" placeholder="Anno (es. 2024)" min="1900" max="2100">
+                    <input type="number" id="mapYear" placeholder="Anno" min="1800" max="2500">
+                    <input type="number" id="mapMonth" placeholder="Mese" min="1" max="12">
                     <button onclick="loadSpatialMap()">Genera Mappa</button>
                 </div>
                 <div class="planets-container">
@@ -49,13 +59,13 @@
                         <div class="planet-circle earth">Terra</div>
                         <ul class="asteroid-list" id="list-Earth"></ul>
                     </div>
-                    <div class="planet-col" id="col-mars">
-                        <div class="planet-circle mars">Marte</div>
-                        <ul class="asteroid-list" id="list-Mars"></ul>
-                    </div>
                     <div class="planet-col" id="col-juptr">
                         <div class="planet-circle juptr">Giove</div>
                         <ul class="asteroid-list" id="list-Juptr"></ul>
+                    </div>
+                    <div class="planet-col" id="col-mars">
+                        <div class="planet-circle mars">Marte</div>
+                        <ul class="asteroid-list" id="list-Mars"></ul>
                     </div>
                 </div>
             </section>
@@ -63,20 +73,21 @@
              <section class="section-insights">
     
                 <div class="card insight-box">
-                    <h2>Top 10 Asteroidi Pericolosi</h2>
+                    <h2>Asteroidi Pericolosi</h2>
                     <ul class="insight-list" id="top-risk-list">
                         </ul>
                 </div>
                 
                 <div class="card insight-box">
-                    <h2>Mesi con più Avvistamenti</h2>
+                    <h2>Anni con più Avvistamenti</h2>
+                    <p class="form-hint">Lascia vuoto per vedere i primi 5.</p>
                     
                     <div class="limit-controls">
-                        <input type="number" id="limitMesi" placeholder="N° mesi" min="1" max="50" class="input-limit">
-                        <button onclick="loadMesi()">Mostra</button>
+                        <input type="number" id="limitAnni" placeholder="N° anni" min="1" max="50" class="input-limit">
+                        <button onclick="loadAnni()">Mostra</button>
                     </div>
                     
-                    <ul class="insight-list" id="recommended-months-list">
+                    <ul class="insight-list" id="recommended-years-list">
                         </ul>
                 </div>
                 
@@ -91,9 +102,12 @@
             
             <div class="add-note-box">
                 <h4>Aggiungi/Modifica Nota</h4>
+                <p class="form-hint">Cerca l'ID cliccando su un asteroide.</p>
+                <p class="form-hint">Se la nota è già esistente, cliccala per modificarla.</p>
                 <input type="number" id="noteAsteroidId" placeholder="ID Asteroide" min="1">
                 <textarea id="noteText" rows="3" placeholder="Scrivi un'osservazione..."></textarea>
                 <button onclick="saveNote()">Salva Nota</button>
+                <p class="form-hint">(Una nota per asteroide)</p>
             </div>
         </aside>
 

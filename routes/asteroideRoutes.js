@@ -6,7 +6,7 @@ const asteroideController = require('../controllers/asteroideController');
 // Il prefisso '/api/asteroidi' è in app.js
 router.get('/stats', asteroideController.getStats);
 router.get('/rischio', asteroideController.getInsightRischio);
-router.get('/mesi-consigliati', asteroideController.getMesiConsigliati);
+router.get('/anni-consigliati', asteroideController.getAnniConsigliati);
 router.get('/mappa', asteroideController.getMappaPianeti);
 
 module.exports = router;

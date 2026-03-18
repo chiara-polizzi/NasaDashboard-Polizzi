@@ -23,7 +23,7 @@ async function fetchAndSaveNasaData() {
           `INSERT INTO asteroidi (id_nasa, nome, magnitudine_assoluta, is_pericoloso)
            VALUES ($1, $2, $3, $4)
            ON CONFLICT (id_nasa) DO NOTHING`,
-          [asteroid.id, asteroid.name, asteroid.absolute_magnitude_h, asteroid.is_potentially_hazardous]
+          [asteroid.id, asteroid.name, asteroid.absolute_magnitude_h, asteroid.is_potentially_hazardous_asteroid]
         );
 
         // Salvataggio in Dati Orbitali

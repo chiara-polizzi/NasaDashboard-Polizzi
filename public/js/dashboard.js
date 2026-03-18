@@ -1,20 +1,74 @@
 let myChart;
+let currentPageChart = 1; // Variabile globale per la paginazione
 
-async function loadChart() {
+// Navigazione pagine grafico
+function changeChartPage(direction) {
+    // Accettiamo solo i numeri +1 o -1
+    if (direction !== 1 && direction !== -1) {
+        console.warn("Tentativo di navigazione non valido. Valore consentito: 1 o -1.");
+        return; 
+    }
+
+    const newPage = currentPageChart + direction;
+    if (newPage < 1) return; // Blocca se cerca di andare prima della pagina 1
+    
+    // Passiamo la nuova pagina alla funzione di caricamento
+    loadChart(newPage); 
+}
+
+async function loadChart(requestedPage = 1) {
+    // Assicuriamoci che requestedPage sia un numero intero valido e >= 1
+    const parsedPage = parseInt(requestedPage, 10);
+    if (isNaN(parsedPage) || parsedPage < 1) {
+        console.error("Pagina richiesta non valida. Deve essere un numero maggiore di zero.");
+        return; // Blocchiamo l'esecuzione prima di fare la fetch
+    }
     // Leggiamo i valori scelti dall'utente
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
 
     // Controllo validità date
-    if (startDate && endDate && startDate > endDate) {
-        alert("La data di inizio non può essere successiva alla data di fine.");
-        return;
+    if (startDate || endDate) {
+        if (!startDate || !endDate) {
+            alert("Devi inserire sia la data di inizio che quella di fine.");
+            return; // Blocca la fetch
+        }
+        
+        // Controllo Regex
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+            alert("Le date devono rispettare il formato corretto.");
+            return;
+        }
+
+        
+        // Controllo Esistenza e conversione in Oggetto Date
+        const startObj = new Date(startDate);
+        const endObj = new Date(endDate);
+        if (isNaN(startObj.getTime()) || isNaN(endObj.getTime())) {
+            alert("Una delle date inserite non esiste sul calendario.");
+            return;
+        }
+
+        // Controllo Anno (1800 - 2500)
+        const startYear = startObj.getFullYear();
+        const endYear = endObj.getFullYear();
+        if (startYear < 1800 || startYear > 2500 || endYear < 1800 || endYear > 2500) {
+            alert("Le date devono essere comprese tra l'anno 1800 e 2500.");
+            return;
+        }
+
+        // Controllo Logico
+        if (startDate > endDate) {
+            alert("La data di inizio non può essere successiva alla data di fine.");
+            return;
+        }
     }
     
     // Costruiamo l'URL dinamicamente se le date sono state inserite
-    let url = '/api/asteroidi/stats';
+    let url = `/api/asteroidi/stats?page=${parsedPage}`;
     if (startDate && endDate) {
-        url += `?startDate=${startDate}&endDate=${endDate}`;
+        url += `&startDate=${startDate}&endDate=${endDate}`;
     }
 
     try {
@@ -28,9 +82,23 @@ async function loadChart() {
 
         // Se non ci sono dati (es. database appena creato), non proviamo a disegnare
         if (!data || data.length === 0) {
-            console.log("Nessun dato presente nel database.");
+            if (requestedPage > 1) {
+                alert("Non ci sono più dati da mostrare.");
+            } else {
+                if (myChart) {
+                    myChart.data.datasets[0].data = [];
+                    myChart.data.labels = [];
+                    myChart.update('none');
+                }
+                alert("Nessun dato presente nel database per il filtro selezionato.");
+            }
             return;
         }
+
+        // Se abbiamo i dati, aggiorniamo l'indicatore della pagina corrente
+        currentPageChart = requestedPage;
+        const pageIndicator = document.getElementById('chartPageIndicator');
+        if (pageIndicator) pageIndicator.innerText = `Pagina ${currentPageChart}`;
 
         const labels = data.map(item => `${item.nome} (${item.data_passaggio.split('T')[0]})`);
         const values = data.map(item => item.velocita_km_h);
@@ -47,11 +115,19 @@ async function loadChart() {
         if(myChart){
             // Diciamo al grafico che tutti i valori sono 0 e aggiorniamo senza animazione ('none')
             myChart.data.datasets[0].data = values.map(() => 0);
+            myChart.data.labels = labels;
             myChart.update('none'); 
 
             // Subito dopo, gli diamo i valori veri e facciamo partire l'animazione
-            myChart.data.labels = labels;
             myChart.data.datasets[0].data = values;
+            // Aggiorniamo l'evento onClick per il pre-fill dell'ID
+            myChart.options.onClick = (event, activeElements) => {
+                if (activeElements.length > 0) {
+                    const dataIndex = activeElements[0].index;
+                    const asteroideId = data[dataIndex].id_nasa; 
+                    if(asteroideId) prefillNote(asteroideId);
+                }
+            };
             myChart.update();
         } else {
             // Se è il primissimo caricamento della pagina
@@ -77,6 +153,13 @@ async function loadChart() {
                     },
                     scales: { 
                         y: { beginAtZero: true } 
+                    },
+                    onClick: (event, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const dataIndex = activeElements[0].index;
+                            const asteroideId = data[dataIndex].id_nasa; 
+                            if(asteroideId) prefillNote(asteroideId);
+                        }
                     } 
                 }
             });
@@ -96,10 +179,11 @@ async function syncNasaData() {
         const text = await response.text();
         alert(text); 
         // Dopo il sync, aggiorniamo tutta la dashboard
-        loadChart(); 
+        currentPageChart = 1;
+        loadChart(1); 
         loadRischio();
         // Svuota le liste precedenti
-        document.getElementById('recommended-months-list').innerHTML = '';
+        document.getElementById('recommended-years-list').innerHTML = '';
         document.getElementById('list-Earth').innerHTML = '';
         document.getElementById('list-Mars').innerHTML = '';
         document.getElementById('list-Juptr').innerHTML = '';
@@ -113,22 +197,32 @@ async function loadSpatialMap() {
     const mese = document.getElementById('mapMonth').value;
     const anno = document.getElementById('mapYear').value;
 
-    if(!mese || !anno) {
-        alert("Inserisci un mese e un anno validi per la mappa.");
+    if(!anno) {
+        alert("Inserisci un anno valido per generare la mappa.");
         return;
     }
 
-    const numMese = parseInt(mese, 10);
     const numAnno = parseInt(anno, 10);
 
-    // Controllo validità numerica Mese e Anno
-    if (isNaN(numMese) || numMese < 1 || numMese > 12 || isNaN(numAnno) || numAnno < 1900 || numAnno > 2100) {
-        alert("Inserisci un mese (1-12) e un anno validi (es. 2024).");
+    // Controllo validità numerica anno
+    if (isNaN(numAnno) || numAnno < 1800 || numAnno > 2500) {
+        alert("Inserisci un anno valido (es. 2024).");
         return;
+    }
+    let url = `/api/asteroidi/mappa?anno=${anno}`;
+    
+    if (mese) {
+        const numMese = parseInt(mese, 10);
+         // Controllo validità numerica mese
+        if (isNaN(numMese) || numMese < 1 || numMese > 12) {
+            alert("Inserisci un mese (1-12) valido.");
+            return;
+        }
+        url += `&mese=${mese}`;
     }
 
     try {
-        const response = await fetch(`/api/asteroidi/mappa?mese=${mese}&anno=${anno}`);
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`Errore Server: ${response.status}`);
         const data = await response.json();
 
@@ -140,12 +234,17 @@ async function loadSpatialMap() {
         // Popola i pianeti
         data.forEach(ast => {
             const li = document.createElement('li');
+            li.style.cursor = "pointer"; // Indica che è cliccabile
+            li.onclick = () => prefillNote(ast.id_nasa); // Invia l'ID al form
+            if (ast.is_pericoloso) {
+                li.classList.add('asteroid-hazardous');
+            }
             li.innerHTML = `<strong>${ast.nome}</strong><br>Dist: ${ast.distanza_miss_km.toFixed(2)} km`;
             
             // Smista negli elenchi giusti a seconda dell'orbita
             if(ast.orbita_corpo === 'Earth') document.getElementById('list-Earth').appendChild(li);
-            if(ast.orbita_corpo === 'Mars') document.getElementById('list-Mars').appendChild(li);
             if(ast.orbita_corpo === 'Juptr') document.getElementById('list-Juptr').appendChild(li);
+            if(ast.orbita_corpo === 'Mars') document.getElementById('list-Mars').appendChild(li);
         });
 
     } catch (error) {
@@ -169,7 +268,9 @@ async function loadRischio() {
         }
 
         datiRischio.forEach(item => {
-            listRischio.innerHTML += `<li><strong>${item.nome}</strong> - Avvistato ${item.numero_avvistamenti_totali} volte</li>`;
+            const tooltipText = `Vel. Max: ${item.velocita_max_raggiunta.toLocaleString()} km/h | Dist. Min: ${item.distanza_piu_vicina_km.toLocaleString()} km.`;
+            listRischio.innerHTML += `<li style="cursor: pointer;" onclick="prefillNote('${item.id_nasa}')" title="${tooltipText}">
+                                        <strong>${item.nome}</strong> - Avvistato ${item.numero_avvistamenti_totali} volte</li>`;
         });
     } catch (error) {
         console.error("Errore insight rischio:", error);
@@ -177,9 +278,9 @@ async function loadRischio() {
 }
 
 // Questa funzione scatta SOLO quando l'utente clicca "Mostra" (caricamento opzionale)
-async function loadMesi() {
-    const limiteInput = document.getElementById('limitMesi').value;
-    const listMesi = document.getElementById('recommended-months-list');
+async function loadAnni() {
+    const limiteInput = document.getElementById('limitAnni').value;
+    const listAnni = document.getElementById('recommended-years-list');
     
     const limiteParsed = parseInt(limiteInput, 10);
 
@@ -191,33 +292,33 @@ async function loadMesi() {
 
     try {
         // Mostra un feedback visivo durante il caricamento
-        listMesi.innerHTML = '<em>Caricamento...</em>';
+        listAnni.innerHTML = '<em>Caricamento...</em>';
 
         // Costruiamo l'URL dinamicamente: 
         // Se il campo è vuoto, chiamiamo l'API base (e il backend userà il 5 di default)
         // Se c'è un numero, lo passiamo come query parameter
-        let url = '/api/asteroidi/mesi-consigliati';
+        let url = '/api/asteroidi/anni-consigliati';
         if (limiteInput !== "") {
             url += `?limite=${limiteInput}`;
         }
 
-        const resMesi = await fetch(url);
-        if (!resMesi.ok) throw new Error(`Errore Server: ${resMesi.status}`);
-        const datiMesi = await resMesi.json();
+        const resAnni = await fetch(url);
+        if (!resAnni.ok) throw new Error(`Errore Server: ${resAnni.status}`);
+        const datiAnni = await resAnni.json();
         
-        listMesi.innerHTML = ''; // Svuota la lista per inserire i nuovi risultati
+        listAnni.innerHTML = ''; // Svuota la lista per inserire i nuovi risultati
 
-        if (datiMesi.length === 0) {
-            listMesi.innerHTML = '<li>Nessun dato storico disponibile.</li>';
+        if (datiAnni.length === 0) {
+            listAnni.innerHTML = '<li>Nessun dato storico disponibile.</li>';
             return;
         }
 
-        datiMesi.forEach(item => {
-            listMesi.innerHTML += `<li>Mese: ${item.mese_passaggio} / Anno: ${item.anno_passaggio} - <strong>${item.totale_asteroidi} asteroidi</strong></li>`;
+        datiAnni.forEach(item => {
+            listAnni.innerHTML += `<li>Anno: ${item.anno_passaggio} - <strong>${item.totale_asteroidi} asteroidi</strong></li>`;
         });
     } catch (error) {
-        console.error("Errore insight mesi:", error);
-        listMesi.innerHTML = '<li style="color: red;">Errore nel caricamento.</li>';
+        console.error("Errore insight anni:", error);
+        listAnni.innerHTML = '<li style="color: red;">Errore nel caricamento.</li>';
     }
 }
 
@@ -244,10 +345,12 @@ async function loadNotes() {
 
         notes.forEach(nota => {
             notesContainer.innerHTML += `
-                <div class="note-item">
+                <div class="note-item"style="cursor: pointer;" 
+                onclick="prefillNote('${nota.asteroide_id}', '${nota.nota_personale.replace(/'/g, "\\'")}')" 
+                title="Clicca per modificare">
                     <strong>Asteroide ID: ${nota.asteroide_id}</strong>
                     <p>${nota.nota_personale}</p>
-                    <span class="btn-delete-note" onclick="deleteNote('${nota.asteroide_id}')">Elimina</span>
+                    <span class="btn-delete-note" onclick="event.stopPropagation(); deleteNote('${nota.asteroide_id}')">Elimina</span>
                 </div>
             `;
         });
@@ -362,10 +465,22 @@ async function renameProfile() {
     }
 }
 
+// Pre-compila il form delle note quando si clicca un asteroide
+function prefillNote(asteroideId, testo = '') {
+    document.getElementById('noteAsteroidId').value = asteroideId;
+    document.getElementById('noteText').value = testo.replace(/\\'/g, "'");
+    
+    // Evidenzia visivamente il box per l'utente
+    const noteBox = document.querySelector('.add-note-box');
+    noteBox.style.border = "2px solid #0056b3";
+    setTimeout(() => noteBox.style.border = "none", 1500);
+    noteBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 // All'avvio della pagina, carica i dati principali
 document.addEventListener('DOMContentLoaded', () => {
     loadProfiles();        // 1. Carica i profili dal DB e riempie la tendina
-    loadChart();          // 2. Carica il grafico
+    loadChart(1);          // 2. Carica il grafico
     loadRischio();       // 3. Carica l'insight
     //loadNotes() verrà chiamata alla fine di loadProfiles()
 });
