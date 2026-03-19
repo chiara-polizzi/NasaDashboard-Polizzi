@@ -1,3 +1,10 @@
+/**
+ * @file db.js
+ * @description Modulo di configurazione e connessione al database PostgreSQL.
+ * Crea un pool di connessioni riutilizzabile per gestire in modo efficiente gli accessi concorrenti,
+ * istanziando i parametri di connessione definiti nell'architettura Docker.
+ */
+
 const { Pool } = require('pg');
 
 // Configuro la connessione al database usando le credenziali definite in docker-compose

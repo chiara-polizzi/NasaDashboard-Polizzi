@@ -1,3 +1,11 @@
+/**
+ * @file app.js
+ * @description Entry point principale dell'applicazione Node.js/Express.
+ * Configura il server HTTP, inietta i middleware globali (parser JSON, file statici)
+ * e coordina il routing (smistamento) verso i vari sottomoduli (API e frontend).
+ * Mantenuto volutamente snello delegando la logica di business ai controller e ai service.
+ */
+
 const express = require('express');
 
 // Importo i tre router specializzati

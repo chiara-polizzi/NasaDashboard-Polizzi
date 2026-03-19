@@ -1,8 +1,20 @@
+/**
+ * @file notaModel.js
+ * @description Livello DAO (Data Access Object) per la gestione delle annotazioni personali.
+ * Incapsula l'interazione diretta con il database PostgreSQL per la tabella 'note_profili'.
+ * Implementa le operazioni CRUD delegando la logica SQL al database, utilizzando i 
+ * Prepared Statements per garantire la massima sicurezza contro le SQL Injection.
+ */
+
 const pool = require('./db');
 
 /**
- * Recupera tutte le note scritte da un determinato profilo (con JOIN per avere il nome dell'asteroide).
- * Copre il requisito di lettura (READ) e l'uso di JOIN.
+ * Recupera tutte le note scritte da un determinato profilo.
+ * Esegue una JOIN con la tabella 'asteroidi' per arricchire il risultato con il nome del corpo celeste.
+ * Copre le operazioni di lettura (READ) e l'uso di JOIN analitiche.
+ *
+ * @param {number} profiloId - L'ID del profilo utente di cui recuperare le note.
+ * @returns {Promise<Array>} Ritorna un array di oggetti contenenti i dati delle note e i nomi degli asteroidi.
  */
 async function getNoteByProfilo(profiloId) {
     const sql = `
@@ -24,8 +36,13 @@ async function getNoteByProfilo(profiloId) {
 
 /**
  * Crea una nuova nota o aggiorna quella esistente se l'utente aveva già commentato quell'asteroide.
- * Query UPSERT (Insert on conflict)
- * Copre le operazioni di CREATE e UPDATE.
+ * Sfrutta la clausola UPSERT (ON CONFLICT DO UPDATE) per eseguire l'operazione in modo atomico,
+ * evitando chiamate multiple al database. Copre le operazioni di CREATE e UPDATE.
+ *
+ * @param {number} profiloId - L'ID del profilo utente.
+ * @param {number} asteroideId - L'ID numerico dell'asteroide commentato.
+ * @param {string} testoNota - Il contenuto testuale della nota da salvare.
+ * @returns {Promise<Object>} Ritorna un oggetto di conferma { success: true }.
  */
 async function upsertNotaPersonale(profiloId, asteroideId, testoNota) {
     const sql = `
@@ -47,8 +64,12 @@ async function upsertNotaPersonale(profiloId, asteroideId, testoNota) {
 }
 
 /**
- * Rimuove una nota.
+ * Rimuove definitivamente una specifica nota dal database.
  * Copre il requisito dell'operazione di DELETE (CRUD).
+ *
+ * @param {number} profiloId - L'ID del profilo utente.
+ * @param {number} asteroideId - L'ID dell'asteroide associato alla nota da eliminare.
+ * @returns {Promise<Object>} Ritorna un oggetto di conferma { success: true }.
  */
 async function deleteNotaPersonale(profiloId, asteroideId) {
     const sql = `

@@ -1,7 +1,34 @@
+/**
+ * @file dashboard.js
+ * @description Motore frontend (Single Page Application) del progetto NASA Asteroids Dashboard.
+ * Gestisce interamente le interazioni dell'utente (DOM manipulation) e comunica in modo 
+ * asincrono (Fetch API) con i micro-servizi esposti dal backend Node.js (/api/asteroidi, /api/profili).
+ * Si occupa inoltre di orchestrare la renderizzazione e le animazioni del grafico tramite Chart.js.
+ * Le operazioni avvengono senza ricaricare la pagina web, garantendo un'esperienza utente fluida.
+ */
+
 let myChart;
 let currentPageChart = 1; // Variabile globale per la paginazione
+const MIN_PROFILO_ID = 1;
+const MAX_PROFILO_ID = 4;
+const MAX_LUNGHEZZA_NOTA = 500;
+const MAX_LUNGHEZZA_NOME = 50;
 
-// Navigazione pagine grafico
+/**
+ * Verifica che l'ID del profilo sia un numero valido e rientri nel range consentito.
+ * @param {string|number} id - L'ID del profilo da controllare
+ * @returns {boolean} True se valido, False altrimenti
+ */
+function isProfileIdValid(id) {
+    const parsedId = parseInt(id, 10);
+    return !isNaN(parsedId) && parsedId >= MIN_PROFILO_ID && parsedId <= MAX_PROFILO_ID;
+}
+
+/**
+ * Gestisce la navigazione tra le pagine del grafico (avanti e indietro).
+ *
+ * @param {number} direction - Direzione della paginazione (+1 per avanti, -1 per indietro).
+ */
 function changeChartPage(direction) {
     // Accettiamo solo i numeri +1 o -1
     if (direction !== 1 && direction !== -1) {
@@ -16,6 +43,12 @@ function changeChartPage(direction) {
     loadChart(newPage); 
 }
 
+/**
+ * Recupera i dati storici degli asteroidi dal backend e aggiorna il grafico a barre.
+ * Include la validazione delle date selezionate dall'utente e gestisce le animazioni di Chart.js.
+ *
+ * @param {number} [requestedPage=1] - Il numero della pagina dei risultati da caricare.
+ */
 async function loadChart(requestedPage = 1) {
     // Assicuriamoci che requestedPage sia un numero intero valido e >= 1
     const parsedPage = parseInt(requestedPage, 10);
@@ -171,6 +204,10 @@ async function loadChart(requestedPage = 1) {
     }
 }
 
+/**
+ * Avvia la sincronizzazione asincrona dei dati dall'API pubblica della NASA al database locale.
+ * Al termine aggiorna automaticamente tutta la dashboard.
+ */
 async function syncNasaData() {
     try {
         alert("Sincronizzazione avviata! Potrebbe volerci qualche secondo...");
@@ -193,6 +230,10 @@ async function syncNasaData() {
     }
 }
 
+/**
+ * Richiede al server gli avvistamenti per un determinato anno (e opzionalmente mese) 
+ * e li smista visivamente nelle rispettive colonne planetarie.
+ */
 async function loadSpatialMap() {
     const mese = document.getElementById('mapMonth').value;
     const anno = document.getElementById('mapYear').value;
@@ -252,7 +293,10 @@ async function loadSpatialMap() {
     }
 }
 
-// Questa funzione gestisce solo gli asteroidi pericolosi (caricamento automatico)
+/**
+ * Interroga la vista analitica del database per recuperare gli asteroidi più pericolosi.
+ * Popola l'elenco nel relativo insight box (caricamento automatico).
+ */
 async function loadRischio() {
     try {
         const resRischio = await fetch('/api/asteroidi/rischio');
@@ -277,7 +321,10 @@ async function loadRischio() {
     }
 }
 
-// Questa funzione scatta SOLO quando l'utente clicca "Mostra" (caricamento opzionale)
+/**
+ * Richiede l'insight statistico sugli anni con il maggior numero di avvistamenti.
+ * Invia al server il limite scelto dall'utente per la paginazione personalizzata.
+ */
 async function loadAnni() {
     const limiteInput = document.getElementById('limitAnni').value;
     const listAnni = document.getElementById('recommended-years-list');
@@ -322,12 +369,25 @@ async function loadAnni() {
     }
 }
 
+/**
+ * Intercetta il cambio di selezione nel menu a tendina dei profili
+ * e innesca il ricaricamento asincrono delle note associate.
+ */
 function changeProfile() {
-    loadNotes(); // Quando l'utente cambia nel menu a tendina, carica le sue note
+    loadNotes(); 
 }
 
+/**
+ * Recupera dal database le note scritte dal profilo correntemente selezionato
+ * e le inietta nel DOM della sidebar.
+ */
 async function loadNotes() {
     const profileId = document.getElementById('profileSelector').value;
+    // Controllo validità ID profilo
+    if (!isProfileIdValid(profileId)) {
+        console.error("ID Profilo non valido.");
+        return;
+    }
     const notesContainer = document.getElementById('notes-container');
     notesContainer.innerHTML = '<em>Caricamento note...</em>';
 
@@ -360,16 +420,30 @@ async function loadNotes() {
     }
 }
 
+/**
+ * Invia al server una nuova nota o l'aggiornamento di una esistente.
+ * Effettua validazione client-side su ID profilo, ID asteroide e lunghezza testo.
+ */
 async function saveNote() {
     const profileId = document.getElementById('profileSelector').value;
     const asteroideId = document.getElementById('noteAsteroidId').value;
     const testoNota = document.getElementById('noteText').value;
+
+    // Controllo validità ID profilo
+    if (!isProfileIdValid(profileId)) {
+        alert("Profilo non valido.");
+        return;
+    }
 
     const asteroideParsed = parseInt(asteroideId, 10);
 
     // Controllo di validità su ID asteroide e testo nota
     if(isNaN(asteroideParsed) || asteroideParsed < 1 || !testoNota || testoNota.trim() === "") {
         alert("Inserisci un ID asteroide valido (maggiore di zero) e il testo della nota.");
+        return;
+    }
+    if (testoNota.trim().length > MAX_LUNGHEZZA_NOTA) {
+        alert(`La nota è troppo lunga. Massimo consentito: ${MAX_LUNGHEZZA_NOTA} caratteri.`);
         return;
     }
 
@@ -391,8 +465,17 @@ async function saveNote() {
     }
 }
 
+/**
+ * Richiede al server l'eliminazione di una specifica nota dell'utente.
+ * @param {string|number} asteroideId - L'ID dell'asteroide associato alla nota
+ */
 async function deleteNote(asteroideId) {
     const profileId = document.getElementById('profileSelector').value;
+    // Controllo validità ID profilo
+    if (!isProfileIdValid(profileId)) {
+        alert("Profilo non valido per l'eliminazione.");
+        return;
+    }
     try {
         const response = await fetch(`/api/profili/${profileId}/note/${asteroideId}`, { method: 'DELETE' });
         if (!response.ok) throw new Error(`Errore Server: ${response.status}`);
@@ -404,8 +487,12 @@ async function deleteNote(asteroideId) {
     }
 }
 
-// Chiama GET /api/profili e riempie il <select>
-async function loadProfiles() {
+/**
+ * Popola il menu a tendina con i profili salvati nel database.
+ *
+ * @param {number|string} [profileId=1] - L'ID del profilo da mantenere o impostare come selezionato.
+ */
+async function loadProfiles(profileId = 1) {
     try {
         const response = await fetch('/api/profili');
         if (!response.ok) throw new Error(`Errore Server: ${response.status}`);
@@ -414,16 +501,24 @@ async function loadProfiles() {
 
         const selector = document.getElementById('profileSelector');
         
-        // Svuotiamo la tendina attuale
-        selector.innerHTML = ''; 
+        if (!selector.options || selector.options.length === 0) {
+        // Riempiamo la tendina con i dati del database
+            profili.forEach(profilo => {
+                const option = document.createElement('option');
+                option.value = profilo.id;
+                option.textContent = profilo.nome_profilo;
+                selector.appendChild(option);
+            });
+        } else {
+            // Se le option esistono, aggiorniamo solo il testo in modo "silenzioso"
+            profili.forEach((profilo, index) => {
+                if(selector.options[index]) {
+                    selector.options[index].textContent = profilo.nome_profilo;
+                }
+            });
+        }
 
-        // Riempiamo la tendina con i dati veri del database
-        profili.forEach(profilo => {
-            const option = document.createElement('option');
-            option.value = profilo.id;
-            option.textContent = profilo.nome_profilo;
-            selector.appendChild(option);
-        });
+         selector.value = profileId;
 
         // Dopo aver caricato i profili, carichiamo le note del primo profilo selezionato
         loadNotes();
@@ -433,17 +528,28 @@ async function loadProfiles() {
     }
 }
 
-// Rinomina il profilo attualmente selezionato
+/**
+ * Permette all'utente di rinominare il profilo correntemente selezionato.
+ */
 async function renameProfile() {
     const selector = document.getElementById('profileSelector');
     const profileId = selector.value;
     const currentName = selector.options[selector.selectedIndex].text;
+    // Controllo validità ID profilo
+    if (!isProfileIdValid(profileId)) {
+        alert("Profilo non valido per la rinomina.");
+        return;
+    }
 
     // Chiediamo all'utente il nuovo nome tramite un semplice popup
     const nuovoNome = prompt("Inserisci il nuovo nome per questo profilo:", currentName);
 
     // Se l'utente ha scritto qualcosa ed è diverso da prima...
     if (nuovoNome && nuovoNome.trim() !== "" && nuovoNome !== currentName) {
+        if (nuovoNome.trim().length > MAX_LUNGHEZZA_NOME) {
+            alert(`Il nome è troppo lungo. Massimo consentito: ${MAX_LUNGHEZZA_NOME} caratteri.`);
+            return;
+        }
         try {
             // Chiamiamo la tua rotta PUT /api/profili/:id
             const response = await fetch(`/api/profili/${profileId}`, {
@@ -465,7 +571,13 @@ async function renameProfile() {
     }
 }
 
-// Pre-compila il form delle note quando si clicca un asteroide
+/**
+ * Pre-compila il form laterale quando l'utente 
+ * interagisce con i grafici o le liste cliccabili.
+ *
+ * @param {string|number} asteroideId - L'ID dell'asteroide da iniettare nel form.
+ * @param {string} [testo=''] - Il testo opzionale di una nota già esistente.
+ */
 function prefillNote(asteroideId, testo = '') {
     document.getElementById('noteAsteroidId').value = asteroideId;
     document.getElementById('noteText').value = testo.replace(/\\'/g, "'");
@@ -477,7 +589,40 @@ function prefillNote(asteroideId, testo = '') {
     noteBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// All'avvio della pagina, carica i dati principali
+/**
+ * Richiede al server il ripristino del profilo selezionato 
+ * (cancellazione di tutte le note e reset del nome di default).
+ */
+async function resetProfile() {
+    const selector = document.getElementById('profileSelector');
+    const profileId = selector.value;
+
+    if (!isProfileIdValid(profileId)) {
+        alert("Profilo non valido per il reset.");
+        return;
+    }
+
+    const conferma = confirm("Sei sicuro di voler resettare questo profilo? Tutte le tue note verranno eliminate definitivamente.");
+    if (!conferma) return;
+
+    try {
+        const response = await fetch(`/api/profili/${profileId}`, { method: 'DELETE' });
+        
+        if (!response.ok) throw new Error(`Errore Server: ${response.status}`);
+        
+        alert("Profilo resettato con successo!");
+        
+        // Ricarichiamo l'elenco dei profili per ripristinare il nome di default nella tendina
+        // All'interno verrà chiamata loadNotes() che svuoterà la lista delle note
+        await loadProfiles(profileId);
+
+    } catch (error) {
+        console.error("Errore durante il reset del profilo:", error);
+        alert("Impossibile resettare il profilo.");
+    }
+}
+
+// Inizializza l'interfaccia al termine del caricamento del DOM
 document.addEventListener('DOMContentLoaded', () => {
     loadProfiles();        // 1. Carica i profili dal DB e riempie la tendina
     loadChart(1);          // 2. Carica il grafico

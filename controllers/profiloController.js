@@ -1,3 +1,10 @@
+/**
+ * @file profiloController.js
+ * @description Controller che gestisce la logica di business relativa ai profili utente e alle annotazioni personali.
+ * Gestisce le operazioni CRUD (Create, Read, Update, Delete) validando rigorosamente gli input (ID e testi)
+ * per garantire l'integrità dei dati prima di interrogare i modelli del database.
+ */
+
 const profiloModel = require('../models/profiloModel');
 const notaModel = require('../models/notaModel');
 
@@ -10,7 +17,11 @@ const MAX_LUNGHEZZA_NOME = 50;
 const MAX_LUNGHEZZA_NOTA = 500;
 
 /**
- * Invia al frontend la lista dei 4 slot profilo disponibili.
+ * Gestisce la richiesta per recuperare l'elenco dei 4 slot profilo disponibili nel sistema.
+ *
+ * @param {Object} req - Oggetto della richiesta Express.
+ * @param {Object} res - Oggetto della risposta Express.
+ * @returns {Promise<void>} Invia una risposta JSON contenente l'array dei profili.
  */
 async function getProfili(req, res) {
     // TODO: Chiamare profiloModel.getAllProfili() e inviare JSON
@@ -24,7 +35,12 @@ async function getProfili(req, res) {
 }
 
 /**
- * Gestisce la rinomina di un profilo esistente (UPDATE).
+ * Gestisce la rinomina di un profilo esistente (operazione UPDATE).
+ * Esegue validazioni rigorose sul formato e sulla lunghezza del nuovo nome per prevenire errori nel DB.
+ *
+ * @param {Object} req - Oggetto della richiesta Express (contiene req.params.id e req.body.nuovoNome).
+ * @param {Object} res - Oggetto della risposta Express.
+ * @returns {Promise<void>} Invia il profilo aggiornato o un messaggio di errore in caso di validazione fallita.
  */
 async function aggiornaProfilo(req, res) {
     try {
@@ -60,7 +76,11 @@ async function aggiornaProfilo(req, res) {
 }
 
 /**
- * Recupera tutte le note di uno specifico profilo (READ).
+ * Recupera tutte le note scritte da uno specifico profilo utente (operazione READ).
+ *
+ * @param {Object} req - Oggetto della richiesta Express (contiene req.params.id).
+ * @param {Object} res - Oggetto della risposta Express.
+ * @returns {Promise<void>} Invia una risposta JSON con l'elenco delle note salvate dall'utente.
  */
 async function getNote(req, res) {
     try {
@@ -79,7 +99,12 @@ async function getNote(req, res) {
 }
 
 /**
- * Salva una nuova nota o aggiorna quella esistente (CREATE / UPDATE).
+ * Gestisce il salvataggio o l'aggiornamento di una nota personale (operazione CREATE / UPDATE tramite Upsert).
+ * Valida l'ID dell'asteroide e la lunghezza massima del testo.
+ *
+ * @param {Object} req - Oggetto della richiesta Express (contiene parametri e corpo della richiesta).
+ * @param {Object} res - Oggetto della risposta Express.
+ * @returns {Promise<void>} Conferma l'avvenuto salvataggio con HTTP 201 (Created).
  */
 async function salvaNota(req, res) {
     try {
@@ -120,7 +145,11 @@ async function salvaNota(req, res) {
 }
 
 /**
- * Elimina una nota specifica (DELETE).
+ * Elimina definitivamente una specifica nota dal database (operazione DELETE).
+ *
+ * @param {Object} req - Oggetto della richiesta Express (contiene req.params.id e req.params.asteroideId).
+ * @param {Object} res - Oggetto della risposta Express.
+ * @returns {Promise<void>} Conferma l'avvenuta eliminazione con HTTP 200 (OK).
  */
 async function eliminaNota(req, res) {
     try {
@@ -143,7 +172,12 @@ async function eliminaNota(req, res) {
 }
 
 /**
- * Resetta un profilo (DELETE delle note + UPDATE del nome a default).
+ * Gestisce il ripristino alle condizioni di default di un profilo.
+ * L'operazione delega al Model una transazione SQL che cancella a cascata le note e resetta il nome.
+ *
+ * @param {Object} req - Oggetto della richiesta Express (contiene req.params.id).
+ * @param {Object} res - Oggetto della risposta Express.
+ * @returns {Promise<void>} Conferma l'avvenuto ripristino.
  */
 async function ripristinaProfilo(req, res) {
     try {

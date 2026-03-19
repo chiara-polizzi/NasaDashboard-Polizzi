@@ -1,16 +1,23 @@
+/**
+ * @file asteroideModel.js
+ * @description Livello DAO (Data Access Object) per l'entità Asteroide.
+ * Incapsula l'interazione diretta con il database PostgreSQL, nascondendo la complessità
+ * delle query SQL (comprese le Viste analitiche) al resto dell'applicazione.
+ * Implementa l'uso sistematico di query parametrizzate per prevenire attacchi di SQL Injection.
+ */
+
 // Importo la connessione al database che ho configurato nell'altro file
 const pool = require('./db');
 
-// Queste funzioni si occupano SOLO di interrogare il DB per i dati della dashboard.
-// Nascondono la query SQL al resto dell'applicazione (approccio DAO).
-
 /**
- * Estraggo i dati (nome, velocità e data di passaggio) per il grafico principale.
- * Se l'utente seleziona un periodo di tempo, costruisco la query dinamicamente 
- * per filtrare i risultati.
+ * Estrae i dati (nome, velocità e data di passaggio) per popolare il grafico principale.
+ * Costruisce la query dinamicamente per filtrare i risultati se vengono forniti parametri temporali,
+ * e gestisce la paginazione in modo sicuro calcolando gli offset.
  *
- * @param {string} [startDate] - Data di inizio ricerca (opzionale, formato YYYY-MM-DD)
- * @param {string} [endDate] - Data di fine ricerca (opzionale, formato YYYY-MM-DD)
+ * @param {string} [startDate] - Data di inizio ricerca (opzionale, formato YYYY-MM-DD).
+ * @param {string} [endDate] - Data di fine ricerca (opzionale, formato YYYY-MM-DD).
+ * @param {number} [limit=10] - Numero massimo di record da restituire per pagina.
+ * @param {number} [offset=0] - Numero di record da saltare (per la paginazione).
  * @returns {Promise<Array>} Ritorna la lista degli asteroidi trovati.
  */
 async function getStatsDashboard(startDate, endDate, limit = 10, offset = 0) {
@@ -47,8 +54,11 @@ async function getStatsDashboard(startDate, endDate, limit = 10, offset = 0) {
 }
 
 /**
- * Recupera la Top 10 degli asteroidi più pericolosi.
- * Query fissa, per una sezione "In Evidenza" della dashboard.
+ * Recupera gli asteroidi più pericolosi.
+ * Interroga una Vista SQL (v_insight_rischio_massimo) precedentemente creata nel database
+ * per alleggerire il carico computazionale di Node.js.
+ *
+ * @returns {Promise<Array>} Array di oggetti contenenti i dati di rischio aggregati.
  */
 async function getInsightRischioMassimo() {
     const sql = `SELECT * FROM v_insight_rischio_massimo;`;
@@ -62,8 +72,11 @@ async function getInsightRischioMassimo() {
 }
 
 /**
- * Aggrega i dati per consigliare all'utente quali mesi/anni guardare.
- * Sfrutta funzioni aggregate e GROUP BY come richiesto nei requisiti minimi.
+ * Aggrega i dati per consigliare all'utente gli anni storici con il maggior numero di avvistamenti.
+ * Interroga la vista spaziale sfruttando funzioni aggregate e GROUP BY direttamente in SQL.
+ *
+ * @param {number} [limite=5] - Numero massimo di anni da restituire nella classifica.
+ * @returns {Promise<Array>} Array contenente l'anno e il rispettivo conteggio totale.
  */
 async function getTopAnniAvvistamenti(limite = 5) {
     const sql = `
@@ -84,6 +97,11 @@ async function getTopAnniAvvistamenti(limite = 5) {
 
 /**
  * Recupera i dati di una specifica finestra temporale per disegnare la mappa interattiva.
+ * Costruisce dinamicamente la query sulla vista spaziale (v_mappa_pianeti) a seconda della presenza del mese.
+ *
+ * @param {number} anno - L'anno di riferimento per filtrare gli avvistamenti.
+ * @param {number} [mese] - Il mese specifico (opzionale, 1-12).
+ * @returns {Promise<Array>} Array di avvistamenti pronti per essere smistati sui vari pianeti nel frontend.
  */
 async function getMappaPianetiByAnno(anno, mese) {
     let sql = `

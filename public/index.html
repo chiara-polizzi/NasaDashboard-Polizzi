@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NASA Asteroid Dashboard - Chiara Polizzi</title>
+    <title>NASA Asteroids Dashboard - Chiara Polizzi</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -16,6 +16,7 @@
             <div class="profile-controls">
                 <select id="profileSelector" onchange="changeProfile()"></select>
                 <button class="btn-rename" onclick="renameProfile()" title="Rinomina profilo corrente">Rinomina</button>
+                <button class="btn-reset" onclick="resetProfile()" title="Ripristina il profilo (elimina note e resetta nome)">Reset</button>
             </div>
             <button class="btn-sync" onclick="syncNasaData()">Sincronizza Dati NASA</button>
         </div>
@@ -102,10 +103,10 @@
             
             <div class="add-note-box">
                 <h4>Aggiungi/Modifica Nota</h4>
-                <p class="form-hint">Cerca l'ID cliccando su un asteroide.</p>
+                <p class="form-hint">Cerca l'ID cliccando su un asteroide sul grafico o sulle liste.</p>
                 <p class="form-hint">Se la nota è già esistente, cliccala per modificarla.</p>
                 <input type="number" id="noteAsteroidId" placeholder="ID Asteroide" min="1">
-                <textarea id="noteText" rows="3" placeholder="Scrivi un'osservazione..."></textarea>
+                <textarea id="noteText" rows="3" placeholder="Scrivi un'osservazione..." maxlength="500"></textarea>
                 <button onclick="saveNote()">Salva Nota</button>
                 <p class="form-hint">(Una nota per asteroide)</p>
             </div>

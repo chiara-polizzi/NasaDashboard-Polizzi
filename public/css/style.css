@@ -165,6 +165,19 @@ button:hover { background-color: #004494; }
 }
 .btn-rename:hover { background-color: #ec971f; }
 
+/* Bottone per ripristinare il profilo */
+.btn-reset {
+    padding: 8px; 
+    background-color: #dc3545; 
+    color: white; 
+    border: none; 
+    border-radius: 4px; 
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+.btn-reset:hover { background-color: #c82333; }
+
 /* Contenitore per il limite dei mesi */
 .limit-controls {
     display: flex; 

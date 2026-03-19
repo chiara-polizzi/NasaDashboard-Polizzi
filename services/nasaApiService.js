@@ -1,10 +1,27 @@
+/**
+ * @file nasaApiService.js
+ * @description Livello Service dedicato all'integrazione con le API esterne.
+ * Gestisce la comunicazione HTTP (tramite Axios) verso l'API pubblica della NASA (NeoWs).
+ * Implementa una logica di snellimento dei dati per estrarre dal pesante payload JSON 
+ * solo le informazioni strettamente necessarie allo schema relazionale locale.
+ * Le query di inserimento sfruttano la clausola ON CONFLICT DO NOTHING per garantire
+ * l'idempotenza delle operazioni e un aggiornamento incrementale (caching) sicuro.
+ */
+
 const axios = require('axios');
 // Importo il pool del database
 const pool = require('../models/db');
 
 const NASA_API_KEY = '8S4z9xeA4LHErrYx4b99wltzJ002Gd4WfBpkRXPs'; // chiave da api.nasa.gov
 
-// Funzione Service per scaricare e salvare i dati
+/**
+ * Funzione Service per scaricare e salvare i dati degli asteroidi.
+ * Effettua una richiesta GET all'endpoint /neo/browse della NASA, cicla i risultati
+ * ed esegue inserimenti condizionali su tre tabelle collegate (asteroidi, dati_orbitali, avvistamenti).
+ *
+ * @returns {Promise<Object>} Ritorna un oggetto di conferma se il salvataggio va a buon fine.
+ * @throws {Error} Propaga l'errore al controller in caso di fallimento della rete o del database.
+ */
 async function fetchAndSaveNasaData() {
   try {
     console.log("Inizio recupero dati dalla NASA... (Catalogo Completo)...");

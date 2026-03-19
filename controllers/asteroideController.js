@@ -1,11 +1,26 @@
+/**
+ * @file asteroideController.js
+ * @description Controller che gestisce la logica di business relativa agli asteroidi e alle statistiche.
+ * Agisce da intermediario tra le rotte HTTP (routes) e il database (models),
+ * occupandosi della validazione rigorosa degli input prima di inoltrare le richieste.
+ */
+
 // Importo il Model (il mio "oggetto DAO") che contiene le query SQL
 const asteroideModel = require('../models/asteroideModel');
 
-const MIN_LIMITE_MESI = 1;
-const MAX_LIMITE_MESI = 50;
+const MIN_LIMITE_ANNI = 1;
+const MAX_LIMITE_ANNI = 50;
 const ITEMS_PER_PAGE = 10;
 
-// Controller per gestire la richiesta dei dati per il grafico della dashboard
+/**
+ * Gestisce la richiesta dei dati storici per popolare il grafico principale della dashboard.
+ * Applica filtri temporali (opzionali) e gestisce la paginazione dei risultati.
+ * Esegue una validazione complessa sulle date in ingresso per prevenire query errate.
+ *
+ * @param {Object} req - Oggetto della richiesta Express (contiene query params: startDate, endDate, page).
+ * @param {Object} res - Oggetto della risposta Express.
+ * @returns {Promise<void>} Invia una risposta JSON con i dati degli asteroidi o un messaggio di errore.
+ */
 async function getStats(req, res) {
   try {
     // 1. Leggo i parametri inviati dal frontend tramite l'URL
@@ -83,7 +98,12 @@ async function getStats(req, res) {
 }
 
 /**
- * Gestisce la richiesta per la Top 10 degli asteroidi più pericolosi.
+ * Gestisce la richiesta per estrarre gli asteroidi classificati come più pericolosi.
+ * Interroga la vista analitica pre-calcolata nel database.
+ *
+ * @param {Object} req - Oggetto della richiesta Express.
+ * @param {Object} res - Oggetto della risposta Express.
+ * @returns {Promise<void>} Invia una risposta JSON con l'elenco degli asteroidi a rischio.
  */
 async function getInsightRischio(req, res) {
     try {
@@ -96,7 +116,12 @@ async function getInsightRischio(req, res) {
 }
 
 /**
- * Gestisce la richiesta per consigliare gli anni con più avvistamenti.
+ * Gestisce la richiesta per calcolare l'insight statistico sugli anni con il maggior numero di avvistamenti.
+ * Applica validazioni sui limiti richiesti dal frontend per prevenire query eccessivamente pesanti.
+ *
+ * @param {Object} req - Oggetto della richiesta Express (contiene query param opzionale: limite).
+ * @param {Object} res - Oggetto della risposta Express.
+ * @returns {Promise<void>} Invia una risposta JSON contenente gli anni e i relativi conteggi.
  */
 async function getAnniConsigliati(req, res) {
     try {
@@ -107,12 +132,12 @@ async function getAnniConsigliati(req, res) {
             limite = parseInt(req.query.limite, 10);
             
             // Controllo che sia un numero valido e non negativo
-            if (isNaN(limite) || limite < MIN_LIMITE_MESI) {
+            if (isNaN(limite) || limite < MIN_LIMITE_ANNI) {
                 return res.status(400).json({ error: "Il limite deve essere un numero intero maggiore di zero." });
             }
             
             // Controllo di sicurezza: evitiamo query troppo pesanti (es. LIMIT 1000000)
-            if (limite > MAX_LIMITE_MESI) {
+            if (limite > MAX_LIMITE_ANNI) {
                 return res.status(400).json({ error: "Il limite massimo consentito è 50." });
             }
         }
@@ -128,7 +153,12 @@ async function getAnniConsigliati(req, res) {
 }
 
 /**
- * Gestisce la richiesta per i dati della mappa. Anno obbligatorio, mese facoltativo.
+ * Gestisce la richiesta per i dati spaziali necessari a popolare la mappa geografica visiva.
+ * Richiede un parametro obbligatorio (anno) e ne accetta uno facoltativo (mese), validandone i range.
+ *
+ * @param {Object} req - Oggetto della richiesta Express (contiene query params: anno, mese).
+ * @param {Object} res - Oggetto della risposta Express.
+ * @returns {Promise<void>} Invia una risposta JSON con gli asteroidi filtrati per data e raggruppabili per orbita.
  */
 async function getMappaPianeti(req, res) {
     try {
