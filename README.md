@@ -18,7 +18,7 @@ Per eseguire il progetto è necessario avere installato:
 ## Guida all'Avvio 
 
 1. Clona la repository sul tuo PC:
-   git clone https://github.com/tuo-username/NasaDashboard-Polizzi.git
+   git clone https://github.com/chiara-polizzi/NasaDashboard-Polizzi.git
    cd NasaDashboard-Polizzi
 
 2. Avvia i container tramite Docker Compose:
@@ -41,7 +41,7 @@ Per eseguire il progetto è necessario avere installato:
 * /routes: Il "centralino" dell'applicazione. È diviso in più file separati per smistare le richieste web in modo ordinato e facile da leggere.
 * /services: Moduli dedicati alle chiamate esterne (es. API NASA) e alla pulizia/snellimento dei payload JSON.
 * app.js: Entry-point del backend, snellito per gestire unicamente l'avvio del server Express e l'iniezione dei middleware.
-* /public: Contiene tutti gli file statici per il frontend:
+* /public: Contiene tutti i file statici per il frontend:
   * /public/index.html: Struttura della dashboard utente.
   * /public/css/style.css: Fogli di stile separati per l'interfaccia grafica.
   * /public/js/dashboard.js: Logica asincrona di frontend e renderizzazione del grafico tramite Chart.js.
